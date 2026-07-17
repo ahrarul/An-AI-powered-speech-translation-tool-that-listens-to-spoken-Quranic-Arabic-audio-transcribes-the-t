@@ -25,11 +25,21 @@ def translate_text_with_ai(text, target_language):
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": f"You are an expert Islamic scholar and linguistics translator. Translate the following Quranic Arabic verse text accurately into {target_language}. Provide only the direct translation text context without preamble or commentary."},
+                {
+                    "role": "system", 
+                    "content": (
+                        f"You are an expert Islamic scholar and multilingual translator. "
+                        f"The input text may be raw Arabic or a Latin/English phonetic transcription "
+                        f"of a Quranic recitation (e.g., 'Alhamdulillahi Rabbil Alameen'). "
+                        f"Identify the Quranic verse being recited, and translate its actual, deep meaning "
+                        f"accurately into {target_language}. Do not just transliterate the sounds into the target script. "
+                        f"Provide only the direct translation text meaning. Do not add commentaries, intro, or surah numbers."
+                    )
+                },
                 {"role": "user", "content": text}
             ]
         )
-        # Robust parsing: handles older index layouts and newer object layouts dynamically
+        # Parsing handling for both older and newer openai library versions
         if hasattr(response, 'choices') and len(response.choices) > 0:
             choice = response.choices[0]
             if hasattr(choice, 'message'):
@@ -39,6 +49,7 @@ def translate_text_with_ai(text, target_language):
         return "Error: Could not parse translation from AI response data."
     except Exception as e:
         return f"Translation processing error: {e}"
+
 
 
 # --- Language Selector Dropdown ---
