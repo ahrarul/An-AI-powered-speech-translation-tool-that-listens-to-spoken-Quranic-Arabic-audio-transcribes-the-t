@@ -29,9 +29,17 @@ def translate_text_with_ai(text, target_language):
                 {"role": "user", "content": text}
             ]
         )
-        return response.choices.message.content
+        # Robust parsing: handles older index layouts and newer object layouts dynamically
+        if hasattr(response, 'choices') and len(response.choices) > 0:
+            choice = response.choices[0]
+            if hasattr(choice, 'message'):
+                return choice.message.content
+            elif isinstance(choice, dict) and 'message' in choice:
+                return choice['message']['content']
+        return "Error: Could not parse translation from AI response data."
     except Exception as e:
         return f"Translation processing error: {e}"
+
 
 # --- Language Selector Dropdown ---
 selected_lang_name = st.selectbox("🌐 Choose Translation Language:", list(LANGUAGES.keys()))
