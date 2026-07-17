@@ -2,7 +2,7 @@
 title: Quran Speech Translator
 emoji: 📖
 colorFrom: green
-colorTo: emerald
+colorTo: green
 sdk: streamlit
 sdk_version: 1.35.0
 app_file: app.py
