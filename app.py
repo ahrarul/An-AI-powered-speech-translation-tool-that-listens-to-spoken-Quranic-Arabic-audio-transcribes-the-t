@@ -1,5 +1,4 @@
 import os
-import sqlite3
 import streamlit as st
 from openai import OpenAI
 from gtts import gTTS
@@ -19,18 +18,6 @@ LANGUAGES = {
     "Hindi (हिंदी)": "hi",
     "Bengali (বাংলা)": "bn"
 }
-
-# --- Database Query Helper ---
-def get_verse_text(surah, ayah):
-    try:
-        conn = sqlite3.connect('quran.db')
-        cursor = conn.cursor()
-        cursor.execute("SELECT arabic_text FROM verses WHERE surah=? AND ayah=?", (surah, ayah))
-        result = cursor.fetchone()
-        conn.close()
-        return result[0] if result else None
-    except Exception as e:
-        return None
 
 # --- AI Translator Helper ---
 def translate_text_with_ai(text, target_language):
@@ -91,26 +78,20 @@ if audio_bytes is not None:
                 detected_text = transcription.text
                 st.success(f"**Transcribed Arabic Text:** {detected_text}")
 
-                # 2. Query local database (Currently Surah 1, Ayah 1 for demo purposes)
-                arabic_verse = get_verse_text(1, 1)
+                # 2. Dynamic Real-time translation via OpenAI GPT-4o-mini
+                with st.spinner(f"Translating to {selected_lang_name}..."):
+                    translation_text = translate_text_with_ai(detected_text, selected_lang_name)
+                
+                st.subheader(f"📝 {selected_lang_name} Translation")
+                st.write(translation_text)
 
-                if arabic_verse:
-                    st.info(f"**Matched Database Verse:** {arabic_verse}")
-                    
-                    # 3. Dynamic Real-time translation via OpenAI GPT-4o-mini
-                    with st.spinner(f"Translating to {selected_lang_name}..."):
-                        translation_text = translate_text_with_ai(arabic_verse, selected_lang_name)
-                    
-                    st.subheader(f"📝 {selected_lang_name} Translation")
-                    st.write(translation_text)
-
-                    # 4. Generate Text-to-Speech matched to translation accent
+                # 3. Generate Text-to-Speech matched to translation accent
+                with st.spinner("Generating audio playback..."):
                     tts = gTTS(text=translation_text, lang=target_lang_code)
                     tts.save("translation.mp3")
                     st.audio("translation.mp3", format="audio/mp3")
-                else:
-                    st.warning("Audio transcribed, but couldn't locate matching record in quran.db.")
 
             except Exception as e:
                 st.error(f"An error occurred during execution: {e}")
+
 
